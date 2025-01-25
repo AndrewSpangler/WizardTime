@@ -22,11 +22,14 @@ FIRE_KEYS_UNPACKED = [
     *FIRE_KEYS[1]
 ]
 
-class Player(ursina.Entity):
+class Player():
     def __init__(self, game, **kwargs):
-        super().__init__(collider=None)
+        # super().__init__(collider=None)
         self.game = game
+        self.x = 0
         self.y = 0
+        self.z = 0
+
         self.origin_y = 0
         self.scale = 3
         self.color = ursina.color.white
@@ -37,9 +40,15 @@ class Player(ursina.Entity):
         self.shield = 100
 
         self.base_acceleration = 10
-        self.max_velocity = 100
+        self.max_velocity = 20
         self.min_velocity = 0.08
         self.decay_rate = 0.04
+
+        self.teleport_cooldown = 2.5 
+        self.next_teleport = time.time()
+
+        self.portal_cooldown = 2.5 
+        self.next_portal = time.time()
 
         self.range = 2
         self.fire_rate = 22
@@ -66,10 +75,10 @@ class Player(ursina.Entity):
         #     ursina.Entity(model='circle', scale=.1, parent=self, color=ursina.color.black, x=0, y=0, z=-1, origin_y=-2, origin_x=-2)
         # ]
 
-        self.hand = ursina.Entity(model='quad', scale=.35, parent=self, texture="ball.png", color=ursina.color.green, x=0, y=0, z=-0.95, origin_y=-1)
-        self.hand.alpha = 0.5
+        # self.hand = ursina.Entity(model='quad', scale=.35, texture="ball.png", color=ursina.color.green, x=0, y=0, z=-0.95, origin_y=-1)
+        # self.hand.alpha = 0.5
 
-        self.ignore_list = [self, self.hand]
+        # self.ignore_list = [self, self.hand]
         
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -81,7 +90,7 @@ class Player(ursina.Entity):
         self._buffer[:] = (
             self.x,
             self.y,
-            self.scale.x,
+            self.scale,
             self.face_direction,
             *self.color,
             self.max_health,
@@ -89,13 +98,13 @@ class Player(ursina.Entity):
             self.health,
             self.shield
         )
-        self.ssbo = ShaderBuffer("drawableData", self._buffer.tobytes(), GeomEnums.UH_static)
+        self.ssbo = ShaderBuffer("PlayerData", self._buffer.tobytes(), GeomEnums.UH_static)
 
     @property
     def position2d(self):
         return ursina.Vec2(self.x, self.y)
 
-    def handle_movement(self):
+    def handle_movement(self, dt):
         self.moving_y = any(ursina.held_keys[k] for k in MOVEMENT_KEYS[0])
         self.moving_x = any(ursina.held_keys[k] for k in MOVEMENT_KEYS[1])
 
@@ -159,10 +168,9 @@ class Player(ursina.Entity):
             new_held_key = new_held_keys[0]
             self.face_direction = FIRE_KEYS_UNPACKED.index(new_held_key)
         self.held_keys = new_held_keys
-        angle=math.atan2(*[[0,-1], [0,1], [-1,0], [1,0]][self.face_direction])
+        # angle=math.atan2(*[[0,-1], [0,1], [-1,0], [1,0]][self.face_direction])
         
-        self.hand.rotation_z = angle*180/math.pi
-
+        # self.hand.rotation_z = angle*180/math.pi
         now = time.time()
         if self.next_shot < now:
             self.fire_projectile()

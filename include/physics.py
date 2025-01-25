@@ -18,9 +18,3 @@ def detect_circle_collision(projectile, entity, overlap:float=0.0):
     distance = (dx**2 + dy**2)**0.5
     return distance <= (projectile.scale/3 + entity.scale[0]/2) * (1.0 - overlap * ((projectile.scale/3)/(entity.scale[0]/2)))
 
-def detect_player_in_range(player, entity, following=False):
-    dx = player.x - entity.x
-    dy = player.y - entity.y
-    distance = (dx**2 + dy**2)**0.5
-    rng = entity.max_follow_range if following else entity.awareness_range
-    return distance <= (player.scale[0]/3 + rng/2)
